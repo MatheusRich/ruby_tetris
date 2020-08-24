@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative './fake_io'
+
 def build_assets
   tetromino = Array.new(7, '')
 
@@ -34,24 +36,41 @@ def rotate(x, y, degree)
   end
 end
 
-module Field
+class Field
   HEIGHT = 12
-  WIDTH = 318
-
+  WIDTH = 18
   BLANK = 0
   BORDER = 9
 
-  extend self
+  def initialize
+    @tiles = build_tiles
+  end
+
+  def at(x, y)
+    @tiles[coordinates(x, y)]
+  end
+
+  def each_coord
+    (0...WIDTH).each do |x|
+      (0...HEIGHT).each do |y|
+        yield(x, y)
+      end
+    end
+  end
+
+  private
+
+  attr_reader :tiles
 
   def coordinates(x, y)
     y * WIDTH + x
   end
 
-  def build
+  def build_tiles
     field = []
 
-    (0..WIDTH).each do |x|
-      (0..HEIGHT).each do |y|
+    (0...WIDTH).each do |x|
+      (0...HEIGHT).each do |y|
         field[coordinates(x, y)] = tile_for(x, y)
       end
     end
@@ -64,6 +83,29 @@ module Field
   end
 end
 
+########################### MAIN ###########################
+
+SCREEN_WIDTH = 30
+SCREEN_HEIGHT = 16
+DRAW_OFFSET = 2
+io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
 tetrominos = build_assets
-field = Field.build
-pp field
+field = Field.new
+screen = []
+
+(0...SCREEN_WIDTH).each do |x|
+  (0...SCREEN_HEIGHT).each do |y|
+    screen[y * SCREEN_WIDTH + x] = '.'
+  end
+end
+
+game_over = false
+
+until game_over
+  field.each_coord do |x, y|
+    screen[(y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)] = ' ABCDEFG=#'[field.at(x, y)]
+  end
+
+  io.write(screen)
+  break
+end
