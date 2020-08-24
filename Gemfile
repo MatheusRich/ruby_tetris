@@ -13,4 +13,6 @@ group :test do
   gem 'guard-minitest', require: false
   gem 'minitest'
   gem 'minitest-reporters'
+  gem 'rake'
+  gem 'simplecov', require: false
 end
