@@ -20,7 +20,7 @@ DEG_180 = 2
 DEG_270 = 3
 
 def rotate(x, y, degree)
-  case degree
+  case degree % 4
   when DEG_0
     (y * 4) - x
   when DEG_90
@@ -33,3 +33,37 @@ def rotate(x, y, degree)
     raise 'Unexpected rotation degree'
   end
 end
+
+module Field
+  HEIGHT = 12
+  WIDTH = 318
+
+  BLANK = 0
+  BORDER = 9
+
+  extend self
+
+  def coordinates(x, y)
+    y * WIDTH + x
+  end
+
+  def build
+    field = []
+
+    (0..WIDTH).each do |x|
+      (0..HEIGHT).each do |y|
+        field[coordinates(x, y)] = tile_for(x, y)
+      end
+    end
+
+    field
+  end
+
+  def tile_for(x, y)
+    x.zero? || x == WIDTH - 1 || y == HEIGHT - 1 ? BORDER : BLANK
+  end
+end
+
+tetrominos = build_assets
+field = Field.build
+pp field
