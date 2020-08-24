@@ -12,8 +12,15 @@ Metrics/BlockLength:
   Exclude:
     - 'test/**/*'
 
+Metrics/MethodLength:
+  Exclude:
+    - 'test/**/*'
+
 Style/Documentation:
   Enabled: false
 
 Style/DocumentationMethod:
+  Enabled: false
+
+Naming/MethodParameterName:
   Enabled: false
