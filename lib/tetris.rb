@@ -114,7 +114,7 @@ until game_over
   sleep 0.1
 
   # ======================= Input =============================
-  key = io.input
+  key = io.read
 
   #======================= Game logic ========================
   if key == :left && piece_fits?(current_piece, current_rotation, current_x - 1, current_y)
@@ -129,11 +129,11 @@ until game_over
     current_y += 1
   end
 
-  break if key == :quit
-
   if key == :space && piece_fits?(current_piece, current_rotation + 1, current_x, current_y)
     current_rotation += 1
   end
+
+  break if key == :quit
 
   # ======================= Render output =======================
 
@@ -157,5 +157,4 @@ until game_over
 
   # Display frame
   io.write(screen)
-  # sleep 10
 end

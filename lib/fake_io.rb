@@ -22,7 +22,7 @@ class FakeIO
     end
   end
 
-  def input
+  def read
     system('stty raw -echo')
     Timeout.timeout(0.01) do
       read_char
