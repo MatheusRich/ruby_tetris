@@ -18,7 +18,19 @@ class Field
   end
 
   def empty_at?(x, y)
+    at(x, y) == Tile::BLANK
+  end
+
+  def filled_at?(x, y)
     at(x, y) != Tile::BLANK
+  end
+
+  def inside_x?(x)
+    x >= 0 && x < Field::WIDTH
+  end
+
+  def inside_y?(y)
+    y >= 0 && y < Field::HEIGHT
   end
 
   def each_coord
@@ -34,7 +46,7 @@ class Field
   attr_reader :tiles
 
   def coordinates(x, y)
-    y * WIDTH + x
+    (y * WIDTH) + x
   end
 
   def build_tiles
