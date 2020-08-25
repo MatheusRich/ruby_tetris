@@ -14,9 +14,7 @@ class FakeIO
 
     i = 0
     while i < @height * @width
-      print buffer[i...(i + @width)].join
-
-      print "\n"
+      puts buffer[i...(i + @width)].join
 
       i += @width
     end
@@ -28,6 +26,7 @@ class FakeIO
       read_char
     end
   rescue Timeout::Error
+    print "\r\e[J"
     nil
   ensure
     system('stty -raw echo')
@@ -36,7 +35,7 @@ class FakeIO
   private
 
   def clear_screen
-    @height.times { print "\r" + ("\e[A\e[K" * 3) }
+    @height.times { print "\r#{"\e[A\e[K" * 3}" }
   end
 
   KEYS = {
