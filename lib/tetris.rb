@@ -3,6 +3,7 @@
 require 'io/console'
 require_relative './fake_io'
 require_relative './field'
+require_relative './colors'
 
 def build_assets
   tetrominos = Array.new(7, '')
@@ -73,7 +74,7 @@ end
 
 LETTER_A_IN_ASCII = 65
 def piece_tile_for(piece_index)
-  (piece_index + LETTER_A_IN_ASCII).chr
+  TILES[piece_index + 1]
 end
 
 # SCREEN
@@ -94,7 +95,7 @@ screen = []
 
 (0...SCREEN_WIDTH).each do |x|
   (0...SCREEN_HEIGHT).each do |y|
-    screen[y * SCREEN_WIDTH + x] = '.'
+    screen[y * SCREEN_WIDTH + x] = '.' # possible -> ▁
   end
 end
 
@@ -108,6 +109,19 @@ current_y = 0
 
 LEFT = 27
 RIGHT = 91
+
+TILES = [
+  ' ',
+  '█'.blue,
+  '█'.red,
+  '█'.green,
+  '█'.magenta,
+  '█'.brown,
+  '█'.cyan,
+  '█'.gray,
+  '=',
+  '░'
+].freeze
 
 until game_over
   # ======================= Game timing =======================
@@ -133,6 +147,10 @@ until game_over
     current_rotation += 1
   end
 
+  if key == :n
+    current_piece = (current_piece + 1) % 7
+  end
+
   break if key == :quit
 
   # ======================= Render output =======================
@@ -140,7 +158,7 @@ until game_over
   # Draw field
   $field.each_coord do |x, y|
     tile = (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
-    screen[tile] = ' ABCDEFG=#'[$field.at(x, y)]
+    screen[tile] = TILES[$field.at(x, y)]
   end
 
   # Draw current piece

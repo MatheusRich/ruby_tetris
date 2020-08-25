@@ -60,6 +60,7 @@ class FakeIO
     case $stdin.getch
     when ' ' then :space
     when 'q' then :quit
+    when 'n' then :n
     when "\e" # ANSI escape sequence
       case $stdin.getch
       when '['
