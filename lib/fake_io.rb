@@ -45,17 +45,6 @@ class FakeIO
     'D' => :left
   }.freeze
 
-  # def read_char_async
-  #   case $stdin.read_nonblock(1).ord
-  #   when ' '  then :space
-  #   when "\e" # ANSI escape sequence
-  #     case $stdin.read_nonblock(1).ord
-  #     when '['
-  #       KEYS[$stdin.read_nonblock(1).ord]
-  #     end
-  #   end
-  # end
-
   def read_char
     case $stdin.getch
     when ' ' then :space
