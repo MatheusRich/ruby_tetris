@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'timeout'
+# $stdout.sync = true
 
 class FakeIO
   def initialize(width, height)
@@ -9,12 +10,15 @@ class FakeIO
   end
 
   def write(buffer)
-    system 'clear'
+    clear_screen
 
-    (0..@height * @width).each do |i|
-      print "\n" if (i % @width).zero? && i != 0
+    i = 0
+    while i < @height * @width
+      print buffer[i...(i + @width)].join
 
-      print buffer[i]
+      print "\n"
+
+      i += @width
     end
   end
 
@@ -30,6 +34,10 @@ class FakeIO
   end
 
   private
+
+  def clear_screen
+    @height.times { print "\r" + ("\e[A\e[K" * 3) }
+  end
 
   KEYS = {
     'A' => :up,
@@ -51,7 +59,8 @@ class FakeIO
 
   def read_char
     case $stdin.getch
-    when ' '  then :space
+    when ' ' then :space
+    when 'q' then :quit
     when "\e" # ANSI escape sequence
       case $stdin.getch
       when '['
