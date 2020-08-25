@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'timeout'
+
 class FakeIO
   def initialize(width, height)
     @width = width
@@ -18,14 +20,13 @@ class FakeIO
 
   def input
     system('stty raw -echo')
-    char = (begin
-              read_char
-            rescue StandardError
-              nil
-            end)
+    Timeout.timeout(0.01) do
+      read_char
+    end
+  rescue Timeout::Error
+    nil
+  ensure
     system('stty -raw echo')
-
-    char
   end
 
   private
@@ -37,16 +38,16 @@ class FakeIO
     'D' => :left
   }.freeze
 
-  def read_char_async
-    case $stdin.read_nonblock(1).ord
-    when ' '  then :space
-    when "\e" # ANSI escape sequence
-      case $stdin.read_nonblock(1).ord
-      when '['
-        KEYS[$stdin.read_nonblock(1).ord]
-      end
-    end
-  end
+  # def read_char_async
+  #   case $stdin.read_nonblock(1).ord
+  #   when ' '  then :space
+  #   when "\e" # ANSI escape sequence
+  #     case $stdin.read_nonblock(1).ord
+  #     when '['
+  #       KEYS[$stdin.read_nonblock(1).ord]
+  #     end
+  #   end
+  # end
 
   def read_char
     case $stdin.getch
