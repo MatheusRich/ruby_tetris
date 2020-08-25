@@ -111,7 +111,7 @@ RIGHT = 91
 
 until game_over
   # ======================= Game timing =======================
-  sleep 0.25
+  sleep 0.1
 
   # ======================= Input =============================
   key = io.input
@@ -129,9 +129,11 @@ until game_over
     current_y += 1
   end
 
-  current_y -= 1 if key == :up
+  break if key == :quit
 
-  current_rotation += 1 if key == :space && piece_fits?(current_piece, current_rotation + 1, current_x, current_y)
+  if key == :space && piece_fits?(current_piece, current_rotation + 1, current_x, current_y)
+    current_rotation += 1
+  end
 
   # ======================= Render output =======================
 
@@ -155,4 +157,5 @@ until game_over
 
   # Display frame
   io.write(screen)
+  # sleep 10
 end
