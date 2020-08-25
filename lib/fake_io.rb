@@ -10,7 +10,7 @@ class FakeIO
     system 'clear'
 
     (0..@height * @width).each do |i|
-      puts '' if (i % @width).zero? && i != 0
+      print "\n" if (i % @width).zero? && i != 0
 
       print buffer[i]
     end
