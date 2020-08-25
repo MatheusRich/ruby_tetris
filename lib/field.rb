@@ -3,8 +3,11 @@
 class Field
   HEIGHT = 12
   WIDTH = 18
-  BLANK = 0
-  BORDER = 9
+
+  module Tile
+    BLANK = 0
+    BORDER = 9
+  end
 
   def initialize
     @tiles = build_tiles
@@ -12,6 +15,10 @@ class Field
 
   def at(x, y)
     @tiles[coordinates(x, y)]
+  end
+
+  def empty_at?(x, y)
+    at(x, y) != Tile::BLANK
   end
 
   def each_coord
@@ -41,6 +48,6 @@ class Field
   end
 
   def tile_for(x, y)
-    x.zero? || x == WIDTH - 1 || y == HEIGHT - 1 ? BORDER : BLANK
+    x.zero? || x == WIDTH - 1 || y == HEIGHT - 1 ? Tile::BORDER : Tile::BLANK
   end
 end
