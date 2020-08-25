@@ -43,7 +43,7 @@ class TestTetris < Minitest::Test
       '.X..'
     ]
 
-    blocks.zip(exp).each do |expected_block, block|
+    blocks.zip(exp).each do |block, expected_block|
       assert_equal expected_block, block
     end
   end
@@ -58,8 +58,8 @@ class TestTetris < Minitest::Test
   def test_that_it_rotates_0_degrees
     assert_equal(0, rotate(0, 0, DEG_0))
     assert_equal(4, rotate(0, 1, DEG_0))
-    assert_equal(-1, rotate(1, 0, DEG_0))
-    assert_equal(3, rotate(1, 1, DEG_0))
+    assert_equal(1, rotate(1, 0, DEG_0))
+    assert_equal(5, rotate(1, 1, DEG_0))
   end
 
   def test_that_it_rotates_90_degrees
