@@ -62,7 +62,7 @@ def piece_fits?(tetromino, rotation, pos_x, pos_y)
     tile_x = (pos_x + x)
     tile_y = (pos_y + y)
 
-    next unless $field.inside_x?(tile_x) && $field.inside_y?(tile_y)
+    next if !$field.inside_x?(tile_x) || !$field.inside_y?(tile_y)
     next if $tetrominos[tetromino][tile_index] == '.' || $field.empty_at?(tile_x, tile_y)
 
     does_it_fit = false
@@ -72,7 +72,7 @@ def piece_fits?(tetromino, rotation, pos_x, pos_y)
   does_it_fit
 end
 
-LETTER_A_IN_ASCII = 65
+# LETTER_A_IN_ASCII = 65
 def piece_tile_for(piece_index)
   TILES[piece_index + 1]
 end
@@ -95,20 +95,9 @@ screen = []
 
 (0...SCREEN_WIDTH).each do |x|
   (0...SCREEN_HEIGHT).each do |y|
-    screen[y * SCREEN_WIDTH + x] = '.' # possible -> ▁
+    screen[y * SCREEN_WIDTH + x] = ' ' # possible -> ▁
   end
 end
-
-# Game logic stuff
-
-game_over = false
-current_piece = 0
-current_rotation = DEG_0
-current_x = Field::WIDTH / 2
-current_y = 0
-
-LEFT = 27
-RIGHT = 91
 
 TILES = [
   ' ',
@@ -122,6 +111,14 @@ TILES = [
   '=',
   '░'
 ].freeze
+
+# Game logic stuff
+
+game_over = false
+current_piece = 0
+current_rotation = DEG_0
+current_x = Field::WIDTH / 2
+current_y = 0
 
 until game_over
   # ======================= Game timing =======================
