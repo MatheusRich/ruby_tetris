@@ -33,10 +33,8 @@ class Field
   def build_tiles
     field = []
 
-    (0...WIDTH).each do |x|
-      (0...HEIGHT).each do |y|
-        field[coordinates(x, y)] = tile_for(x, y)
-      end
+    each_coord do |x, y|
+      field[coordinates(x, y)] = tile_for(x, y)
     end
 
     field
