@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
+require 'io/console'
 require_relative './fake_io'
 require_relative './field'
-
-TETROMINO_WIDTH = 4
-TETROMINO_HEIGHT = 4
 
 def build_assets
   tetrominos = Array.new(7, '')
@@ -19,6 +17,8 @@ def build_assets
 
   tetrominos
 end
+
+# PIECE STUFF
 
 DEG_0 = 0
 DEG_90 = 1
@@ -40,28 +40,46 @@ def rotate(x, y, degree)
   end
 end
 
-def piece_fit?(tetromino, rotation, pos_x, pos_y)
+TETROMINO_WIDTH = 4
+TETROMINO_HEIGHT = 4
+
+def iterate_tetromino
   (0...TETROMINO_WIDTH).each do |x|
     (0...TETROMINO_HEIGHT).each do |y|
-      piece_index = rotate(pos_x, pos_y, rotation)
-
-      tile_x = (pos_x + x)
-      tile_y = (pos_y + y)
-
-      next unless tile_x >= 0 && tile_x < Field::WIDTH
-
-      if tile_y >= 0 && tile_y < Field::HEIGHT
-        return false if $tetrominos[tetromino][piece_index] == 'X' && $field.empty_at?(tile_x, tile_y)
-      end
+      yield(x, y)
     end
   end
+end
 
-  true
+def piece_fits?(tetromino, rotation, pos_x, pos_y)
+  does_it_fit = true
+  asdf = ''
+
+  iterate_tetromino do |x, y|
+    tile_index = rotate(x, y, rotation)
+
+    tile_x = (pos_x + x)
+    tile_y = (pos_y + y)
+
+    next unless $field.inside_x?(tile_x) && $field.inside_y?(tile_y)
+    next if $tetrominos[tetromino][tile_index] == '.' || $field.empty_at?(tile_x, tile_y)
+
+    does_it_fit = false
+    break
+  end
+
+  does_it_fit
 end
 
 LETTER_A_IN_ASCII = 65
 def piece_tile_for(piece_index)
   (piece_index + LETTER_A_IN_ASCII).chr
+end
+
+# SCREEN
+
+def screen_at(x, y)
+  (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
 end
 
 ########################### MAIN ###########################
@@ -88,14 +106,34 @@ current_rotation = DEG_0
 current_x = Field::WIDTH / 2
 current_y = 0
 
+LEFT = 27
+RIGHT = 91
+
 until game_over
-  # Game timing =======================
+  # ======================= Game timing =======================
+  sleep 0.25
 
-  # Input =============================
+  # ======================= Input =============================
+  key = io.input
 
-  # Game logic ========================
+  #======================= Game logic ========================
+  if key == :left && piece_fits?(current_piece, current_rotation, current_x - 1, current_y)
+    current_x -= 1
+  end
 
-  # Render output =======================
+  if key == :right && piece_fits?(current_piece, current_rotation, current_x + 1, current_y)
+    current_x += 1
+  end
+
+  if key == :down && piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
+    current_y += 1
+  end
+
+  current_y -= 1 if key == :up
+
+  current_rotation += 1 if key == :space && piece_fits?(current_piece, current_rotation + 1, current_x, current_y)
+
+  # ======================= Render output =======================
 
   # Draw field
   $field.each_coord do |x, y|
@@ -104,19 +142,17 @@ until game_over
   end
 
   # Draw current piece
-  (0...TETROMINO_WIDTH).each do |x|
-    (0...TETROMINO_HEIGHT).each do |y|
-      if $tetrominos[current_piece][rotate(x, y, current_rotation)] == 'X'
-        screen[
-          (current_y + y + DRAW_OFFSET) * SCREEN_WIDTH + (current_x + x + DRAW_OFFSET)
-        ] = piece_tile_for(current_piece)
-      end
-    end
+  iterate_tetromino do |x, y|
+    is_empty_tile = $tetrominos[current_piece][rotate(x, y, current_rotation)] != 'X'
+
+    next if is_empty_tile
+
+    tile_x = current_x + x
+    tile_y = current_y + y
+
+    screen[screen_at(tile_x, tile_y)] = piece_tile_for(current_piece)
   end
 
   # Display frame
   io.write(screen)
-
-  sleep 2
-  current_piece = (current_piece + 1) % 7
 end
