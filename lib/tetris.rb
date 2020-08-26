@@ -55,7 +55,6 @@ end
 
 def piece_fits?(tetromino, rotation, pos_x, pos_y)
   does_it_fit = true
-  asdf = ''
 
   iterate_tetromino do |x, y|
     tile_index = rotate(x, y, rotation)
