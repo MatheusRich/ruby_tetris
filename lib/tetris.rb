@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'io/console'
+require 'json'
 require_relative './fake_io'
 require_relative './field'
 require_relative './colors'
@@ -93,6 +94,7 @@ io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
 $tetrominos = build_assets
 $field = Field.new
 screen = []
+high_scores = JSON.parse(File.read('./high_scores.json'))
 
 (0...SCREEN_WIDTH).each do |x|
   (0...SCREEN_HEIGHT).each do |y|
@@ -231,7 +233,9 @@ until game_over
 
   if lines.any?
     io.write(screen)
-    sleep 0.4
+    puts "Score: #{score}"
+    puts "Record: #{high_scores.first['score']}\n\n"
+    sleep 0.3
 
     lines.each do |line_y_pos|
       (1...(Field::WIDTH - 1)).each do |x|
@@ -248,7 +252,8 @@ until game_over
 
   # Display frame
   io.write(screen)
-  puts "Score: #{score}\n"
+  puts "Score: #{score}"
+  puts "Record: #{high_scores.first['score']}\n\n"
 
   tf = Time.now
   elapsed_time = tf - t0
