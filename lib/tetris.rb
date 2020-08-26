@@ -252,7 +252,7 @@ until game_over
   # Display frame
   io.write(screen)
   puts "Score: #{score}"
-  puts "Record: #{high_scores.first['score']}\n\n"
+  puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
 
   tf = Time.now
   elapsed_time = tf - t0
