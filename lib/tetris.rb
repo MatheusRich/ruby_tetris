@@ -85,6 +85,7 @@ end
 
 ########################### MAIN ###########################
 
+FPS = 30
 SCREEN_WIDTH = 22
 SCREEN_HEIGHT = 16
 DRAW_OFFSET = 2
@@ -119,10 +120,15 @@ current_piece = 0
 current_rotation = DEG_0
 current_x = Field::WIDTH / 2
 current_y = 0
+speed = 10
+speed_counter = 0
+lines = []
 
 until game_over
   # ======================= Game timing =======================
-  sleep 0.1
+  t0 = Time.now
+  speed_counter += 1
+  should_force_down = (speed_counter == speed)
 
   # ======================= Input =============================
   key = io.read
@@ -144,11 +150,55 @@ until game_over
     current_rotation += 1
   end
 
-  if key == :n
-    current_piece = (current_piece + 1) % 7
-  end
+  current_piece = (current_piece + 1) % 7 if key == :n
 
   break if key == :quit
+
+  if should_force_down
+    if piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
+      current_y += 1
+    else
+      # Lock the current piece in the field
+      iterate_tetromino do |x, y|
+        x_pos = x + current_x
+        y_pos = y + current_y
+
+        if $tetrominos[current_piece][rotate(x, y, current_rotation)] == 'X'
+          $field.set(x_pos, y_pos, as: current_piece + 1)
+        end
+      end
+
+      # Check for horizontal lines
+      (0...4).each do |y|
+        pos_y = current_y + y
+
+        if pos_y < Field::HEIGHT - 1
+          has_complete_line = true
+
+          (1...(Field::WIDTH - 1)).each do |x|
+            has_complete_line &= $field.filled_at?(x, pos_y)
+          end
+
+          if has_complete_line
+            (1...(Field::WIDTH - 1)).each do |x|
+              $field.set(x, pos_y, as: Field::Tile::LINE)
+            end
+            lines << pos_y
+          end
+        end
+      end
+
+      # Choose next piece
+      current_piece = rand(0..6)
+      current_rotation = DEG_0
+      current_x = Field::WIDTH / 2
+      current_y = 0
+
+      game_over = !piece_fits?(current_piece, current_rotation, current_x, current_y)
+    end
+
+    speed_counter = 0
+  end
 
   # ======================= Render output =======================
 
@@ -170,6 +220,30 @@ until game_over
     screen[screen_at(tile_x, tile_y)] = piece_tile_for(current_piece)
   end
 
+  if lines.any?
+    io.write(screen)
+    sleep 0.4
+
+    lines.each do |line_y_pos|
+      (1...(Field::WIDTH - 1)).each do |x|
+        line_y_pos.downto(1) do |y|
+          $field.set(x, y, as: $field.at(x, y - 1))
+        end
+
+        $field.force_set(x, as: Field::Tile::BLANK)
+      end
+    end
+
+    lines.clear
+  end
+
   # Display frame
   io.write(screen)
+
+  tf = Time.now
+  elapsed_time = tf - t0
+  sleep_time = (1.0 / FPS) - elapsed_time
+
+  sleep 0.1
+  # sleep sleep_time if sleep_time.positive?
 end
