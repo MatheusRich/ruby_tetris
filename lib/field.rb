@@ -2,15 +2,24 @@
 
 class Field
   HEIGHT = 12
-  WIDTH = 18
+  WIDTH  = 18
 
   module Tile
-    BLANK = 0
+    BLANK  = 0
+    LINE   = 8
     BORDER = 9
   end
 
   def initialize
     @tiles = build_tiles
+  end
+
+  def set(x, y, as:)
+    @tiles[coordinates(x, y)] = as
+  end
+
+  def force_set(pos, as:)
+    @tiles[pos] = as
   end
 
   def at(x, y)
