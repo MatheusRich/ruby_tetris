@@ -123,6 +123,7 @@ current_y = 0
 speed = 10
 speed_counter = 0
 pieces_count = 0
+score = 0
 lines = []
 
 until game_over
@@ -187,10 +188,14 @@ until game_over
             (1...(Field::WIDTH - 1)).each do |x|
               $field.set(x, pos_y, as: Field::Tile::LINE)
             end
+
             lines << pos_y
           end
         end
       end
+
+      score += 25
+      score += ((1 << lines.size ) * 100) if lines.any?
 
       # Choose next piece
       current_piece = rand(0..6)
@@ -243,6 +248,7 @@ until game_over
 
   # Display frame
   io.write(screen)
+  puts "Score: #{score}\n"
 
   tf = Time.now
   elapsed_time = tf - t0
