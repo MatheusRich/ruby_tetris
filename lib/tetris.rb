@@ -122,6 +122,7 @@ current_x = Field::WIDTH / 2
 current_y = 0
 speed = 10
 speed_counter = 0
+pieces_count = 0
 lines = []
 
 until game_over
@@ -167,6 +168,9 @@ until game_over
           $field.set(x_pos, y_pos, as: current_piece + 1)
         end
       end
+
+      pieces_count += 1
+      speed -= 1 if (pieces_count % 10 == 0) && speed >= 10
 
       # Check for horizontal lines
       (0...4).each do |y|
