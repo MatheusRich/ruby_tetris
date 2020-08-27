@@ -153,8 +153,6 @@ until game_over
     current_rotation += 1
   end
 
-  current_piece = (current_piece + 1) % 7 if key == :n
-
   break if key == :quit
 
   if should_force_down
