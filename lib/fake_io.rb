@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'timeout'
-# $stdout.sync = true
 
 class FakeIO
   def initialize(width, height)
@@ -10,19 +9,19 @@ class FakeIO
   end
 
   def write(buffer)
-    clear_screen
-
     i = 0
+    output = ''
     while i < @height * @width
-      puts buffer[i...(i + @width)].join
+      output += "#{buffer[i...(i + @width)].join}\n"
 
       i += @width
     end
+    puts clear_screen + output
   end
 
   def read
     system('stty raw -echo')
-    Timeout.timeout(0.01) do
+    Timeout.timeout(0.02) do
       read_char
     end
   rescue Timeout::Error
@@ -35,7 +34,7 @@ class FakeIO
   private
 
   def clear_screen
-    @height.times { print "\r#{"\e[A\e[K" * 3}" }
+    @clear_screen ||= "\r#{"\e[A\e[K" * 3}" * @height
   end
 
   KEYS = {
@@ -49,7 +48,6 @@ class FakeIO
     case $stdin.getch
     when ' ' then :space
     when 'q' then :quit
-    when 'n' then :n
     when "\e" # ANSI escape sequence
       case $stdin.getch
       when '['
