@@ -121,7 +121,7 @@ current_piece = 0
 current_rotation = DEG_0
 current_x = Field::WIDTH / 2
 current_y = 0
-speed = 10
+speed = 30
 speed_counter = 0
 pieces_count = 0
 score = 0
@@ -258,6 +258,7 @@ until game_over
   elapsed_time = tf - t0
   sleep_time = (1.0 / FPS) - elapsed_time
 
-  sleep 0.1
-  # sleep sleep_time if sleep_time.positive?
+  sleep sleep_time if sleep_time.positive?
 end
+
+puts 'Game over!'
