@@ -6,11 +6,12 @@ require_relative 'fake_io'
 require_relative 'field'
 require_relative 'piece'
 
-INITIAL_SPEED = 30
 FPS = 30
-SCREEN_WIDTH = 22
-SCREEN_HEIGHT = 16
+INITIAL_SPEED = 30
 DRAW_OFFSET = 2
+SCREEN_WIDTH = Field::WIDTH + DRAW_OFFSET * 2
+SCREEN_HEIGHT = Field::HEIGHT + DRAW_OFFSET * 2
+
 TILES = [
   ' ', # Nothing
   *Piece::TILES,
@@ -62,7 +63,7 @@ class Tetris
       handle_input(key)
 
       if should_force_piece_down
-        if @piece.move_down.fits?(@field)
+        if @piece.try(:move_down).fits?(@field)
           @piece.move_down!
         else
           @field.lock_piece!(piece)
