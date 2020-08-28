@@ -18,29 +18,50 @@ class Piece
     '.....XX..X...X..'
   ].freeze
 
+  TILES = [
+    '█'.blue,
+    '█'.red,
+    '█'.green,
+    '█'.magenta,
+    '█'.brown,
+    '█'.cyan,
+    '█'.gray
+  ].freeze
+
+  attr_accessor :id, :y
+
   def initialize(x:, y:)
-    @sprite = TETROMINOS.sample
+    @id = rand(0...TETROMINOS.size)
+    @sprite = TETROMINOS[@id]
     @rotation = DEG_0
     @x = x
     @y = y
   end
 
+  def tile
+    @tile ||= TILES[@id]
+  end
+
   def fits?(field)
     does_it_fit = true
 
-    iterate_tetromino do |x, y|
-      tile_pos = tile_position(x, y)
-      tile_x = (pos_x + x)
-      tile_y = (pos_y + y)
-
-      next if !field.inside_x?(tile_x) || !field.inside_y?(tile_y)
-      next if empty_tile?(tile_pos) || field.empty_at?(tile_x, tile_y)
+    each_tile do |x, y|
+      next unless field.inside_x?(x) && field.inside_y?(y)
+      next if field.empty_at?(x, y)
 
       does_it_fit = false
-      break
     end
 
     does_it_fit
+  end
+
+  def each_tile
+    iterate_tetromino do |tile_i, tile_j|
+      sprite = rotate_tile(tile_i, tile_j)
+      next if empty_tile?(sprite)
+
+      yield(tile_i + @x, tile_j + @y)
+    end
   end
 
   def iterate_tetromino
@@ -51,7 +72,7 @@ class Piece
     end
   end
 
-  def tile_position(x, y)
+  def rotate_tile(x, y)
     case @rotation % 4
     when DEG_0
       (y * 4) + x
@@ -79,15 +100,43 @@ class Piece
     @x -= 1
   end
 
+  def move_left
+    copy = dup
+    copy.move_left!
+
+    copy
+  end
+
   def move_right!
     @x += 1
+  end
+
+  def move_right
+    copy = dup
+    copy.move_right!
+
+    copy
   end
 
   def move_down!
     @y += 1
   end
 
+  def move_down
+    copy = dup
+    copy.move_down!
+
+    copy
+  end
+
   def rotate!
     @rotation += 1
+  end
+
+  def rotate
+    copy = dup
+    copy.rotate!
+
+    copy
   end
 end

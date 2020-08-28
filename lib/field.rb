@@ -10,8 +10,11 @@ class Field
     BORDER = 9
   end
 
+  attr_accessor :lines
+
   def initialize
     @tiles = build_tiles
+    @lines = []
   end
 
   def set(x, y, as:)
@@ -31,7 +34,7 @@ class Field
   end
 
   def filled_at?(x, y)
-    at(x, y) != Tile::BLANK
+    !empty_at?(x, y)
   end
 
   def inside_x?(x)
@@ -47,6 +50,55 @@ class Field
       (0...HEIGHT).each do |y|
         yield(x, y)
       end
+    end
+  end
+
+  def clear_lines!
+    @lines = []
+  end
+
+  def lock_piece!(piece)
+    piece.each_tile do |x, y|
+      set(x, y, as: piece.id + 1)
+    end
+  end
+
+  def check
+    (0...4).each do |y|
+      pos_y = current_y + y
+
+      if pos_y < Field::HEIGHT - 1
+        has_complete_line = true
+
+        (1...(Field::WIDTH - 1)).each do |x|
+          has_complete_line &= @field.filled_at?(x, pos_y)
+        end
+
+        if has_complete_line
+          (1...(Field::WIDTH - 1)).each do |x|
+            @field.set(x, pos_y, as: Field::Tile::LINE)
+          end
+
+          lines << pos_y
+        end
+      end
+    end
+  end
+
+  def check_for_lines!(piece_y)
+    (0...4).each do |y|
+      pos_y = piece_y + y
+
+      next if pos_y >= Field::HEIGHT - 1
+
+      columns = (1...(Field::WIDTH - 1))
+      has_complete_line = columns.all? { |x| filled_at?(x, pos_y) }
+
+      next unless has_complete_line
+
+      columns.each { |x| set(x, pos_y, as: Tile::LINE) }
+
+      lines << pos_y
     end
   end
 
