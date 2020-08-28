@@ -16,10 +16,6 @@ class Canvas
     @canvas = init_canvas
   end
 
-  def [](x, y)
-    @canvas[at(x, y)]
-  end
-
   def []=(x, y, value)
     @canvas[at(x, y)] = value
   end
