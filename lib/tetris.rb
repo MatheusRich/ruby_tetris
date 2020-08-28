@@ -2,23 +2,10 @@
 
 require 'io/console'
 require 'json'
-require_relative './fake_io'
-require_relative './field'
-require_relative './colors'
-
-def build_assets
-  tetrominos = Array.new(7, '')
-
-  tetrominos[0] += '..X...X...X...X.'
-  tetrominos[1] += '..X..XX..X......'
-  tetrominos[2] += '.X...XX...X.....'
-  tetrominos[3] += '.....XX..XX.....'
-  tetrominos[4] += '..X..XX...X.....'
-  tetrominos[5] += '.....XX...X...X.'
-  tetrominos[6] += '.....XX..X...X..'
-
-  tetrominos
-end
+require_relative 'fake_io'
+require_relative 'field'
+require_relative 'colors'
+require_relative 'piece'
 
 # PIECE STUFF
 
@@ -72,7 +59,6 @@ def piece_fits?(tetromino, rotation, pos_x, pos_y)
   does_it_fit
 end
 
-# LETTER_A_IN_ASCII = 65
 def piece_tile_for(piece_index)
   TILES[piece_index + 1]
 end
@@ -104,6 +90,8 @@ TILES = [
 ].freeze
 
 class Tetris
+  INITIAL_SPEED = 30
+
   def self.play
     new.play
   end
@@ -111,7 +99,7 @@ class Tetris
   def initialize
     @io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
     @field = Field.new
-    @tetrominos = build_assets
+    @tetrominos = Piece::TETROMINOS
   end
 
   def play
@@ -119,12 +107,13 @@ class Tetris
     high_scores = JSON.parse(File.read('./high_scores.json'))
     game_over = false
 
+    piece = new_piece
     current_piece = 0
     current_rotation = DEG_0
     current_x = Field::WIDTH / 2
     current_y = 0
 
-    speed = 30
+    speed = INITIAL_SPEED
     speed_counter = 0
     pieces_count = 0
 
@@ -148,20 +137,29 @@ class Tetris
       key = @io.read
 
       #======================= Game logic ========================
-      if key == :left && piece_fits?(current_piece, current_rotation, current_x - 1, current_y)
+      # if key == :left && piece_fits?(current_piece, current_rotation, current_x - 1, current_y)
+      #   current_x -= 1
+      #   piece.move_left!
+      # end
+
+      if key == :left && piece.fits?(current_piece, current_rotation, current_x - 1, current_y)
         current_x -= 1
+        piece.move_left!
       end
 
       if key == :right && piece_fits?(current_piece, current_rotation, current_x + 1, current_y)
         current_x += 1
+        piece.move_right!
       end
 
       if key == :down && piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
         current_y += 1
+        piece.move_down!
       end
 
       if key == :space && piece_fits?(current_piece, current_rotation + 1, current_x, current_y)
         current_rotation += 1
+        piece.rotate!
       end
 
       break if key == :quit
@@ -169,6 +167,7 @@ class Tetris
       if should_force_down
         if piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
           current_y += 1
+          piece.move_down!
         else
           # Lock the current piece in the field
           iterate_tetromino do |x, y|
@@ -208,10 +207,11 @@ class Tetris
           score += ((1 << lines.size ) * 100) if lines.any?
 
           # Choose next piece
-          current_piece = new_piece
+          current_piece = rand(0..6)
           current_rotation = DEG_0
           current_x = Field::WIDTH / 2
           current_y = 0
+          piece = new_piece
 
           game_over = !piece_fits?(current_piece, current_rotation, current_x, current_y)
         end
@@ -278,5 +278,9 @@ class Tetris
 
   def on_game_over
     puts 'Game over!'
+  end
+
+  def new_piece
+    Piece.new(x: Field::WIDTH / 2, y: 0)
   end
 end
