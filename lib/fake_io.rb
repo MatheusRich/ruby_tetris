@@ -25,9 +25,9 @@ class FakeIO
       read_char
     end
   rescue Timeout::Error
-    print "\r\e[J"
     nil
   ensure
+    print "\r\e[J"
     system('stty -raw echo')
   end
 
