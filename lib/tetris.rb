@@ -36,25 +36,21 @@ class Tetris
     @io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
     @field = Field.new
     @tetrominos = Piece::TETROMINOS
+    @piece = new_piece
+    @screen = init_canvas
   end
 
   def play
     high_scores = JSON.parse(File.read('./high_scores.json'))
     game_over = false
-
-    piece = new_piece
     speed = INITIAL_SPEED
     speed_counter = 0
     pieces_count = 0
-
     score = 0
-
-    # Initializing screen canvas
-    screen = init_canvas
 
     until game_over
       # ======================= Game timing =======================
-      t0 = Time.now
+      t1 = Time.now
       speed_counter += 1
       should_force_down = (speed_counter == speed)
 
@@ -62,42 +58,28 @@ class Tetris
       key = @io.read
 
       #======================= Game logic ========================
-      if key == :left && piece.move_left.fits?(@field)
-        piece.move_left!
-      end
-
-      if key == :right && piece.move_right.fits?(@field)
-        piece.move_right!
-      end
-
-      if key == :down && piece.move_down.fits?(@field)
-        piece.move_down!
-      end
-
-      if key == :space && piece.rotate.fits?(@field)
-        piece.rotate!
-      end
-
       break if key == :quit
 
+      handle_input(key)
+
       if should_force_down
-        if piece.move_down.fits?(@field)
-          piece.move_down!
+        if @piece.move_down.fits?(@field)
+          @piece.move_down!
         else
           @field.lock_piece!(piece)
 
           pieces_count += 1
           speed -= 1 if (pieces_count % 10 == 0) && speed >= 0
 
-          @field.check_for_lines!(piece.y)
+          @field.check_for_lines!(@piece.y)
 
           score += 25
-          score += ((1 << @field.lines.size ) * 100) if @field.lines.any?
+          score += ((1 << @field.lines.size) * 100) if @field.lines.any?
 
           # Choose next piece
-          piece = new_piece
+          @piece = new_piece
 
-          game_over = !piece.fits?(@field)
+          game_over = !@piece.fits?(@field)
         end
 
         speed_counter = 0
@@ -112,8 +94,8 @@ class Tetris
       end
 
       # Draw current piece
-      piece.each_tile do |x, y|
-        screen[screen_at(x, y)] = piece.tile
+      @piece.each_tile do |x, y|
+        screen[screen_at(x, y)] = @piece.tile
       end
 
       if @field.lines.any?
@@ -127,8 +109,8 @@ class Tetris
 
       render_canvas(screen, score, high_scores)
 
-      tf = Time.now
-      elapsed_time = tf - t0
+      t2 = Time.now
+      elapsed_time = t2 - t1
       sleep_time = (1.0 / FPS) - elapsed_time
 
       sleep sleep_time if sleep_time.positive?
@@ -139,6 +121,8 @@ class Tetris
 
   private
 
+  attr_accessor :piece, :screen
+
   def init_canvas
     screen = []
     (0...SCREEN_WIDTH).each do |x|
@@ -148,6 +132,13 @@ class Tetris
     end
 
     screen
+  end
+
+  def handle_input(key)
+    @piece.move_left! if key == :left && @piece.move_left.fits?(@field)
+    @piece.move_right! if key == :right && @piece.move_right.fits?(@field)
+    @piece.move_down! if key == :down && @piece.move_down.fits?(@field)
+    @piece.rotate! if key == :space && @piece.rotate.fits?(@field)
   end
 
   def render_canvas(screen, score, high_scores)
