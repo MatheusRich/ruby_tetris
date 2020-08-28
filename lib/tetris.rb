@@ -62,8 +62,8 @@ def piece_fits?(tetromino, rotation, pos_x, pos_y)
     tile_x = (pos_x + x)
     tile_y = (pos_y + y)
 
-    next if !$field.inside_x?(tile_x) || !$field.inside_y?(tile_y)
-    next if $tetrominos[tetromino][tile_index] == '.' || $field.empty_at?(tile_x, tile_y)
+    next if !@field.inside_x?(tile_x) || !@field.inside_y?(tile_y)
+    next if @tetrominos[tetromino][tile_index] == '.' || @field.empty_at?(tile_x, tile_y)
 
     does_it_fit = false
     break
@@ -103,30 +103,40 @@ TILES = [
   '░'
 ].freeze
 
-module Tetris
+class Tetris
   def self.play
-    io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
-    $tetrominos = build_assets
-    $field = Field.new
+    new.play
+  end
+
+  def initialize
+    @io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
+    @field = Field.new
+    @tetrominos = build_assets
+  end
+
+  def play
     screen = []
     high_scores = JSON.parse(File.read('./high_scores.json'))
-
-    (0...SCREEN_WIDTH).each do |x|
-      (0...SCREEN_HEIGHT).each do |y|
-        screen[y * SCREEN_WIDTH + x] = ' ' # possible -> ▁
-      end
-    end
-
     game_over = false
+
     current_piece = 0
     current_rotation = DEG_0
     current_x = Field::WIDTH / 2
     current_y = 0
+
     speed = 30
     speed_counter = 0
     pieces_count = 0
+
     score = 0
     lines = []
+
+    # Initializing screen canvas
+    (0...SCREEN_WIDTH).each do |x|
+      (0...SCREEN_HEIGHT).each do |y|
+        screen[y * SCREEN_WIDTH + x] = ' '
+      end
+    end
 
     until game_over
       # ======================= Game timing =======================
@@ -135,7 +145,7 @@ module Tetris
       should_force_down = (speed_counter == speed)
 
       # ======================= Input =============================
-      key = io.read
+      key = @io.read
 
       #======================= Game logic ========================
       if key == :left && piece_fits?(current_piece, current_rotation, current_x - 1, current_y)
@@ -165,13 +175,13 @@ module Tetris
             x_pos = x + current_x
             y_pos = y + current_y
 
-            if $tetrominos[current_piece][rotate(x, y, current_rotation)] == 'X'
-              $field.set(x_pos, y_pos, as: current_piece + 1)
+            if @tetrominos[current_piece][rotate(x, y, current_rotation)] == 'X'
+              @field.set(x_pos, y_pos, as: current_piece + 1)
             end
           end
 
           pieces_count += 1
-          speed -= 1 if (pieces_count % 10 == 0) && speed >= 10
+          speed -= 1 if (pieces_count % 10 == 0) && speed >= 0
 
           # Check for horizontal lines
           (0...4).each do |y|
@@ -181,12 +191,12 @@ module Tetris
               has_complete_line = true
 
               (1...(Field::WIDTH - 1)).each do |x|
-                has_complete_line &= $field.filled_at?(x, pos_y)
+                has_complete_line &= @field.filled_at?(x, pos_y)
               end
 
               if has_complete_line
                 (1...(Field::WIDTH - 1)).each do |x|
-                  $field.set(x, pos_y, as: Field::Tile::LINE)
+                  @field.set(x, pos_y, as: Field::Tile::LINE)
                 end
 
                 lines << pos_y
@@ -198,7 +208,7 @@ module Tetris
           score += ((1 << lines.size ) * 100) if lines.any?
 
           # Choose next piece
-          current_piece = rand(0..6)
+          current_piece = new_piece
           current_rotation = DEG_0
           current_x = Field::WIDTH / 2
           current_y = 0
@@ -212,14 +222,14 @@ module Tetris
       # ======================= Render output =======================
 
       # Draw field
-      $field.each_coord do |x, y|
+      @field.each_coord do |x, y|
         tile = (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
-        screen[tile] = TILES[$field.at(x, y)]
+        screen[tile] = TILES[@field.at(x, y)]
       end
 
       # Draw current piece
       iterate_tetromino do |x, y|
-        is_empty_tile = $tetrominos[current_piece][rotate(x, y, current_rotation)] != 'X'
+        is_empty_tile = @tetrominos[current_piece][rotate(x, y, current_rotation)] != 'X'
 
         next if is_empty_tile
 
@@ -230,7 +240,7 @@ module Tetris
       end
 
       if lines.any?
-        io.write(screen)
+        @io.write(screen)
         puts "Score: #{score}"
         puts "Record: #{high_scores.first['score']}\n\n"
         sleep 0.3
@@ -238,20 +248,17 @@ module Tetris
         lines.each do |line_y_pos|
           (1...(Field::WIDTH - 1)).each do |x|
             line_y_pos.downto(1) do |y|
-              $field.set(x, y, as: $field.at(x, y - 1))
+              @field.set(x, y, as: @field.at(x, y - 1))
             end
 
-            $field.force_set(x, as: Field::Tile::BLANK)
+            @field.force_set(x, as: Field::Tile::BLANK)
           end
         end
 
         lines.clear
       end
 
-      # Display frame
-      io.write(screen)
-      puts "Score: #{score}"
-      puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
+      render(screen, score, high_scores)
 
       tf = Time.now
       elapsed_time = tf - t0
@@ -263,7 +270,13 @@ module Tetris
     on_game_over
   end
 
-  def self.on_game_over
+  def render(screen, score, high_scores)
+    @io.write(screen)
+    puts "Score: #{score}"
+    puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
+  end
+
+  def on_game_over
     puts 'Game over!'
   end
 end
