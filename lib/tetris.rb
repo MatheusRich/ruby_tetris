@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-require 'io/console'
-require 'json'
-require_relative 'fake_io'
+require_relative 'canvas'
 require_relative 'field'
 require_relative 'piece'
 
 FPS = 30
 INITIAL_SPEED = 30
+
 DRAW_OFFSET = 2
 SCREEN_WIDTH = Field::WIDTH + DRAW_OFFSET * 2
 SCREEN_HEIGHT = Field::HEIGHT + DRAW_OFFSET * 2
@@ -19,14 +18,6 @@ TILES = [
   '░'  # Wall
 ].freeze
 
-# SCREEN
-
-def screen_at(x, y)
-  (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
-end
-
-########################### MAIN ###########################
-
 class Tetris
   def self.play
     new.play
@@ -35,9 +26,8 @@ class Tetris
   def initialize
     @io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
     @field = Field.new
-    @tetrominos = Piece::TETROMINOS
     @piece = new_piece
-    @screen = init_canvas
+    @canvas = Canvas.new
     @score = 0
     @high_scores = JSON.parse(File.read('./high_scores.json'))
   end
@@ -104,15 +94,8 @@ class Tetris
 
   attr_accessor :piece, :screen, :score, :high_scores
 
-  def init_canvas
-    screen = []
-    (0...SCREEN_WIDTH).each do |x|
-      (0...SCREEN_HEIGHT).each do |y|
-        screen[y * SCREEN_WIDTH + x] = ' '
-      end
-    end
-
-    screen
+  def new_piece
+    Piece.new(x: Field::WIDTH / 2, y: 0)
   end
 
   def handle_input(key)
@@ -124,14 +107,13 @@ class Tetris
 
   def draw_field!
     @field.each_coord do |x, y|
-      tile = (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
-      @screen[tile] = TILES[@field.at(x, y)]
+      @canvas[x, y] = TILES[@field.at(x, y)]
     end
   end
 
   def draw_piece!
     @piece.each_tile do |x, y|
-      @screen[screen_at(x, y)] = @piece.tile
+      @canvas[x, y] = @piece.tile
     end
   end
 
@@ -145,16 +127,12 @@ class Tetris
   end
 
   def render_canvas
-    @io.write(@screen)
+    @io.write(@canvas.canvas)
     puts "Score: #{score}"
     puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
   end
 
   def on_game_over
     puts 'Game over!'
-  end
-
-  def new_piece
-    Piece.new(x: Field::WIDTH / 2, y: 0)
   end
 end
