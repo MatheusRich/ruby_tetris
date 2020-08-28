@@ -1,14 +1,10 @@
 # frozen_string_literal: true
 
 require_relative 'string_colors'
+require_relative 'basic_math'
 
 class Piece
   using StringColors
-
-  DEG_0 = 0
-  DEG_90 = 1
-  DEG_180 = 2
-  DEG_270 = 3
 
   TETROMINO_WIDTH = 4
   TETROMINO_HEIGHT = 4
@@ -37,7 +33,7 @@ class Piece
   def initialize(x:, y:)
     @id = rand(0...TETROMINOS.size)
     @sprite = TETROMINOS[@id]
-    @rotation = DEG_0
+    @rotation = BasicMath::DEG_0
     @x = x
     @y = y
   end
@@ -61,42 +57,11 @@ class Piece
 
   def each_tile
     iterate_tetromino do |tile_i, tile_j|
-      sprite = rotate_tile(tile_i, tile_j)
+      sprite = BasicMath.rotate(tile_i, tile_j, @rotation)
       next if empty_tile?(sprite)
 
       yield(tile_i + @x, tile_j + @y)
     end
-  end
-
-  def iterate_tetromino
-    (0...TETROMINO_WIDTH).each do |x|
-      (0...TETROMINO_HEIGHT).each do |y|
-        yield(x, y)
-      end
-    end
-  end
-
-  def rotate_tile(x, y)
-    case @rotation % 4
-    when DEG_0
-      (y * 4) + x
-    when DEG_90
-      12 + y - (x * 4)
-    when DEG_180
-      15 - (y * 4) - x
-    when DEG_270
-      3 - y + (x * 4)
-    else
-      raise 'Unexpected rotation degree'
-    end
-  end
-
-  def empty_tile?(tile_pos)
-    @sprite[tile_pos] == '.'
-  end
-
-  def solid_tile?(tile_pos)
-    !empty_tile?(tile_pos)
   end
 
   # Movement
@@ -142,5 +107,19 @@ class Piece
     copy.rotate!
 
     copy
+  end
+
+  private
+
+  def iterate_tetromino
+    (0...TETROMINO_WIDTH).each do |x|
+      (0...TETROMINO_HEIGHT).each do |y|
+        yield(x, y)
+      end
+    end
+  end
+
+  def empty_tile?(tile_pos)
+    @sprite[tile_pos] == '.'
   end
 end
