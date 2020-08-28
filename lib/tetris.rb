@@ -76,7 +76,6 @@ class Tetris
           score += 25
           score += ((1 << @field.lines.size) * 100) if @field.lines.any?
 
-          # Choose next piece
           @piece = new_piece
 
           game_over = !@piece.fits?(@field)
@@ -87,16 +86,8 @@ class Tetris
 
       # ======================= Render output =======================
 
-      # Draw field
-      @field.each_coord do |x, y|
-        tile = (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
-        screen[tile] = TILES[@field.at(x, y)]
-      end
-
-      # Draw current piece
-      @piece.each_tile do |x, y|
-        screen[screen_at(x, y)] = @piece.tile
-      end
+      draw_field!
+      draw_piece!
 
       if @field.lines.any?
         @io.write(screen)
@@ -107,7 +98,7 @@ class Tetris
         @field.drop_lines!
       end
 
-      render_canvas(screen, score, high_scores)
+      render_canvas(score, high_scores)
 
       t2 = Time.now
       elapsed_time = t2 - t1
@@ -141,8 +132,21 @@ class Tetris
     @piece.rotate! if key == :space && @piece.rotate.fits?(@field)
   end
 
-  def render_canvas(screen, score, high_scores)
-    @io.write(screen)
+  def draw_field!
+    @field.each_coord do |x, y|
+      tile = (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
+      @screen[tile] = TILES[@field.at(x, y)]
+    end
+  end
+
+  def draw_piece!
+    @piece.each_tile do |x, y|
+      @screen[screen_at(x, y)] = @piece.tile
+    end
+  end
+
+  def render_canvas(score, high_scores)
+    @io.write(@screen)
     puts "Score: #{score}"
     puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
   end
