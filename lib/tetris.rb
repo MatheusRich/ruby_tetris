@@ -4,7 +4,6 @@ require 'io/console'
 require 'json'
 require_relative 'fake_io'
 require_relative 'field'
-require_relative 'colors'
 require_relative 'piece'
 
 INITIAL_SPEED = 30
@@ -44,15 +43,15 @@ class Tetris
 
   def play
     game_over = false
-    speed = INITIAL_SPEED
+    game_speed = INITIAL_SPEED
     speed_counter = 0
-    pieces_count = 0
+    delivered_pieces = 0
 
     until game_over
       # ======================= Game timing =======================
       t1 = Time.now
       speed_counter += 1
-      should_force_piece_down = (speed_counter == speed)
+      should_force_piece_down = (speed_counter == game_speed)
 
       # ======================= Input =============================
       key = @io.read
@@ -68,8 +67,8 @@ class Tetris
         else
           @field.lock_piece!(piece)
 
-          pieces_count += 1
-          speed -= 1 if (pieces_count % 10 == 0) && speed.positive?
+          delivered_pieces += 1
+          game_speed -= 1 if (delivered_pieces % 10 == 0) && game_speed.positive?
 
           @field.check_for_lines!(@piece.y)
 
@@ -77,7 +76,6 @@ class Tetris
           @score += ((1 << @field.lines.size) * 100) if @field.lines.any?
 
           @piece = new_piece
-
           game_over = !@piece.fits?(@field)
         end
 
@@ -139,7 +137,7 @@ class Tetris
   def draw_lines!
     return if @field.lines.empty?
 
-    render_canvas
+    render_canvas # HACK: Showing lines
     sleep 0.3
 
     @field.drop_lines!
