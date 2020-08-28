@@ -38,21 +38,21 @@ class Tetris
     @tetrominos = Piece::TETROMINOS
     @piece = new_piece
     @screen = init_canvas
+    @score = 0
+    @high_scores = JSON.parse(File.read('./high_scores.json'))
   end
 
   def play
-    high_scores = JSON.parse(File.read('./high_scores.json'))
     game_over = false
     speed = INITIAL_SPEED
     speed_counter = 0
     pieces_count = 0
-    score = 0
 
     until game_over
       # ======================= Game timing =======================
       t1 = Time.now
       speed_counter += 1
-      should_force_down = (speed_counter == speed)
+      should_force_piece_down = (speed_counter == speed)
 
       # ======================= Input =============================
       key = @io.read
@@ -62,19 +62,19 @@ class Tetris
 
       handle_input(key)
 
-      if should_force_down
+      if should_force_piece_down
         if @piece.move_down.fits?(@field)
           @piece.move_down!
         else
           @field.lock_piece!(piece)
 
           pieces_count += 1
-          speed -= 1 if (pieces_count % 10 == 0) && speed >= 0
+          speed -= 1 if (pieces_count % 10 == 0) && speed.positive?
 
           @field.check_for_lines!(@piece.y)
 
-          score += 25
-          score += ((1 << @field.lines.size) * 100) if @field.lines.any?
+          @score += 25
+          @score += ((1 << @field.lines.size) * 100) if @field.lines.any?
 
           @piece = new_piece
 
@@ -88,17 +88,8 @@ class Tetris
 
       draw_field!
       draw_piece!
-
-      if @field.lines.any?
-        @io.write(screen)
-        puts "Score: #{score}"
-        puts "Record: #{high_scores.first['score']}\n\n"
-        sleep 0.3
-
-        @field.drop_lines!
-      end
-
-      render_canvas(score, high_scores)
+      draw_lines!
+      render_canvas
 
       t2 = Time.now
       elapsed_time = t2 - t1
@@ -112,7 +103,7 @@ class Tetris
 
   private
 
-  attr_accessor :piece, :screen
+  attr_accessor :piece, :screen, :score, :high_scores
 
   def init_canvas
     screen = []
@@ -145,7 +136,16 @@ class Tetris
     end
   end
 
-  def render_canvas(score, high_scores)
+  def draw_lines!
+    return if @field.lines.empty?
+
+    render_canvas
+    sleep 0.3
+
+    @field.drop_lines!
+  end
+
+  def render_canvas
     @io.write(@screen)
     puts "Score: #{score}"
     puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
