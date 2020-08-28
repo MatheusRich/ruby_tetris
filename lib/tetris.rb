@@ -7,20 +7,16 @@ require_relative 'piece'
 FPS = 30
 INITIAL_SPEED = 30
 
-DRAW_OFFSET = 2
-SCREEN_WIDTH = Field::WIDTH + DRAW_OFFSET * 2
-SCREEN_HEIGHT = Field::HEIGHT + DRAW_OFFSET * 2
-
 class Tetris
   def self.play
     new.play
   end
 
   def initialize
-    @io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
+    @canvas = Canvas.new(Field::WIDTH, Field::HEIGHT)
+    @io = FakeIO.new(*@canvas.dimentions)
     @field = Field.new
     @piece = new_piece
-    @canvas = Canvas.new
     @score = 0
     @high_scores = JSON.parse(File.read('./high_scores.json'))
   end
