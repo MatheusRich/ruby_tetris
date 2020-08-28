@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'piece'
-
 class Field
   HEIGHT = 12
   WIDTH  = 18
@@ -11,13 +9,6 @@ class Field
     LINE   = 8
     BORDER = 9
   end
-
-  TILES = [
-    ' ', # Nothing
-    *Piece::TILES,
-    '=', # Line
-    '░'  # Wall
-  ].freeze
 
   attr_accessor :lines
 
@@ -32,10 +23,6 @@ class Field
 
   def [](x, y)
     @tiles[at(x, y)]
-  end
-
-  def tile_at(x, y)
-    TILES[self[x, y]]
   end
 
   def empty_at?(x, y)

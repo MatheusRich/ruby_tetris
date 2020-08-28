@@ -38,10 +38,6 @@ class Piece
     @y = y
   end
 
-  def tile
-    @tile ||= TILES[@id]
-  end
-
   def fits?(field)
     does_it_fit = true
 

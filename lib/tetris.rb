@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'canvas'
+require_relative 'fake_io'
 require_relative 'field'
 require_relative 'piece'
 
@@ -95,15 +96,11 @@ class Tetris
   end
 
   def draw_field!
-    @field.each_coord do |x, y|
-      @canvas[x, y] = @field.tile_at(x, y)
-    end
+    @canvas.draw_field!(@field)
   end
 
   def draw_piece!
-    @piece.each_tile do |x, y|
-      @canvas[x, y] = @piece.tile
-    end
+    @canvas.draw_piece!(@piece)
   end
 
   def draw_lines!
