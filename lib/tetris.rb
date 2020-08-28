@@ -11,13 +11,6 @@ DRAW_OFFSET = 2
 SCREEN_WIDTH = Field::WIDTH + DRAW_OFFSET * 2
 SCREEN_HEIGHT = Field::HEIGHT + DRAW_OFFSET * 2
 
-TILES = [
-  ' ', # Nothing
-  *Piece::TILES,
-  '=', # Line
-  '░'  # Wall
-].freeze
-
 class Tetris
   def self.play
     new.play
@@ -107,7 +100,7 @@ class Tetris
 
   def draw_field!
     @field.each_coord do |x, y|
-      @canvas[x, y] = TILES[@field.at(x, y)]
+      @canvas[x, y] = @field.tile_at(x, y)
     end
   end
 
