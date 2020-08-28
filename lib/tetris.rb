@@ -89,17 +89,6 @@ FPS = 30
 SCREEN_WIDTH = 22
 SCREEN_HEIGHT = 16
 DRAW_OFFSET = 2
-io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
-$tetrominos = build_assets
-$field = Field.new
-screen = []
-high_scores = JSON.parse(File.read('./high_scores.json'))
-
-(0...SCREEN_WIDTH).each do |x|
-  (0...SCREEN_HEIGHT).each do |y|
-    screen[y * SCREEN_WIDTH + x] = ' ' # possible -> ▁
-  end
-end
 
 TILES = [
   ' ',
@@ -114,149 +103,167 @@ TILES = [
   '░'
 ].freeze
 
-# Game logic stuff
+module Tetris
+  def self.play
+    io = FakeIO.new(SCREEN_WIDTH, SCREEN_HEIGHT)
+    $tetrominos = build_assets
+    $field = Field.new
+    screen = []
+    high_scores = JSON.parse(File.read('./high_scores.json'))
 
-game_over = false
-current_piece = 0
-current_rotation = DEG_0
-current_x = Field::WIDTH / 2
-current_y = 0
-speed = 30
-speed_counter = 0
-pieces_count = 0
-score = 0
-lines = []
+    (0...SCREEN_WIDTH).each do |x|
+      (0...SCREEN_HEIGHT).each do |y|
+        screen[y * SCREEN_WIDTH + x] = ' ' # possible -> ▁
+      end
+    end
 
-until game_over
-  # ======================= Game timing =======================
-  t0 = Time.now
-  speed_counter += 1
-  should_force_down = (speed_counter == speed)
+    game_over = false
+    current_piece = 0
+    current_rotation = DEG_0
+    current_x = Field::WIDTH / 2
+    current_y = 0
+    speed = 30
+    speed_counter = 0
+    pieces_count = 0
+    score = 0
+    lines = []
 
-  # ======================= Input =============================
-  key = io.read
+    until game_over
+      # ======================= Game timing =======================
+      t0 = Time.now
+      speed_counter += 1
+      should_force_down = (speed_counter == speed)
 
-  #======================= Game logic ========================
-  if key == :left && piece_fits?(current_piece, current_rotation, current_x - 1, current_y)
-    current_x -= 1
-  end
+      # ======================= Input =============================
+      key = io.read
 
-  if key == :right && piece_fits?(current_piece, current_rotation, current_x + 1, current_y)
-    current_x += 1
-  end
-
-  if key == :down && piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
-    current_y += 1
-  end
-
-  if key == :space && piece_fits?(current_piece, current_rotation + 1, current_x, current_y)
-    current_rotation += 1
-  end
-
-  break if key == :quit
-
-  if should_force_down
-    if piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
-      current_y += 1
-    else
-      # Lock the current piece in the field
-      iterate_tetromino do |x, y|
-        x_pos = x + current_x
-        y_pos = y + current_y
-
-        if $tetrominos[current_piece][rotate(x, y, current_rotation)] == 'X'
-          $field.set(x_pos, y_pos, as: current_piece + 1)
-        end
+      #======================= Game logic ========================
+      if key == :left && piece_fits?(current_piece, current_rotation, current_x - 1, current_y)
+        current_x -= 1
       end
 
-      pieces_count += 1
-      speed -= 1 if (pieces_count % 10 == 0) && speed >= 10
+      if key == :right && piece_fits?(current_piece, current_rotation, current_x + 1, current_y)
+        current_x += 1
+      end
 
-      # Check for horizontal lines
-      (0...4).each do |y|
-        pos_y = current_y + y
+      if key == :down && piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
+        current_y += 1
+      end
 
-        if pos_y < Field::HEIGHT - 1
-          has_complete_line = true
+      if key == :space && piece_fits?(current_piece, current_rotation + 1, current_x, current_y)
+        current_rotation += 1
+      end
 
-          (1...(Field::WIDTH - 1)).each do |x|
-            has_complete_line &= $field.filled_at?(x, pos_y)
+      break if key == :quit
+
+      if should_force_down
+        if piece_fits?(current_piece, current_rotation, current_x, current_y + 1)
+          current_y += 1
+        else
+          # Lock the current piece in the field
+          iterate_tetromino do |x, y|
+            x_pos = x + current_x
+            y_pos = y + current_y
+
+            if $tetrominos[current_piece][rotate(x, y, current_rotation)] == 'X'
+              $field.set(x_pos, y_pos, as: current_piece + 1)
+            end
           end
 
-          if has_complete_line
-            (1...(Field::WIDTH - 1)).each do |x|
-              $field.set(x, pos_y, as: Field::Tile::LINE)
+          pieces_count += 1
+          speed -= 1 if (pieces_count % 10 == 0) && speed >= 10
+
+          # Check for horizontal lines
+          (0...4).each do |y|
+            pos_y = current_y + y
+
+            if pos_y < Field::HEIGHT - 1
+              has_complete_line = true
+
+              (1...(Field::WIDTH - 1)).each do |x|
+                has_complete_line &= $field.filled_at?(x, pos_y)
+              end
+
+              if has_complete_line
+                (1...(Field::WIDTH - 1)).each do |x|
+                  $field.set(x, pos_y, as: Field::Tile::LINE)
+                end
+
+                lines << pos_y
+              end
+            end
+          end
+
+          score += 25
+          score += ((1 << lines.size ) * 100) if lines.any?
+
+          # Choose next piece
+          current_piece = rand(0..6)
+          current_rotation = DEG_0
+          current_x = Field::WIDTH / 2
+          current_y = 0
+
+          game_over = !piece_fits?(current_piece, current_rotation, current_x, current_y)
+        end
+
+        speed_counter = 0
+      end
+
+      # ======================= Render output =======================
+
+      # Draw field
+      $field.each_coord do |x, y|
+        tile = (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
+        screen[tile] = TILES[$field.at(x, y)]
+      end
+
+      # Draw current piece
+      iterate_tetromino do |x, y|
+        is_empty_tile = $tetrominos[current_piece][rotate(x, y, current_rotation)] != 'X'
+
+        next if is_empty_tile
+
+        tile_x = current_x + x
+        tile_y = current_y + y
+
+        screen[screen_at(tile_x, tile_y)] = piece_tile_for(current_piece)
+      end
+
+      if lines.any?
+        io.write(screen)
+        puts "Score: #{score}"
+        puts "Record: #{high_scores.first['score']}\n\n"
+        sleep 0.3
+
+        lines.each do |line_y_pos|
+          (1...(Field::WIDTH - 1)).each do |x|
+            line_y_pos.downto(1) do |y|
+              $field.set(x, y, as: $field.at(x, y - 1))
             end
 
-            lines << pos_y
+            $field.force_set(x, as: Field::Tile::BLANK)
           end
         end
+
+        lines.clear
       end
 
-      score += 25
-      score += ((1 << lines.size ) * 100) if lines.any?
+      # Display frame
+      io.write(screen)
+      puts "Score: #{score}"
+      puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
 
-      # Choose next piece
-      current_piece = rand(0..6)
-      current_rotation = DEG_0
-      current_x = Field::WIDTH / 2
-      current_y = 0
+      tf = Time.now
+      elapsed_time = tf - t0
+      sleep_time = (1.0 / FPS) - elapsed_time
 
-      game_over = !piece_fits?(current_piece, current_rotation, current_x, current_y)
+      sleep sleep_time if sleep_time.positive?
     end
 
-    speed_counter = 0
+    on_game_over
   end
 
-  # ======================= Render output =======================
-
-  # Draw field
-  $field.each_coord do |x, y|
-    tile = (y + DRAW_OFFSET) * SCREEN_WIDTH + (x + DRAW_OFFSET)
-    screen[tile] = TILES[$field.at(x, y)]
+  def self.on_game_over
+    puts 'Game over!'
   end
-
-  # Draw current piece
-  iterate_tetromino do |x, y|
-    is_empty_tile = $tetrominos[current_piece][rotate(x, y, current_rotation)] != 'X'
-
-    next if is_empty_tile
-
-    tile_x = current_x + x
-    tile_y = current_y + y
-
-    screen[screen_at(tile_x, tile_y)] = piece_tile_for(current_piece)
-  end
-
-  if lines.any?
-    io.write(screen)
-    puts "Score: #{score}"
-    puts "Record: #{high_scores.first['score']}\n\n"
-    sleep 0.3
-
-    lines.each do |line_y_pos|
-      (1...(Field::WIDTH - 1)).each do |x|
-        line_y_pos.downto(1) do |y|
-          $field.set(x, y, as: $field.at(x, y - 1))
-        end
-
-        $field.force_set(x, as: Field::Tile::BLANK)
-      end
-    end
-
-    lines.clear
-  end
-
-  # Display frame
-  io.write(screen)
-  puts "Score: #{score}"
-  puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
-
-  tf = Time.now
-  elapsed_time = tf - t0
-  sleep_time = (1.0 / FPS) - elapsed_time
-
-  sleep sleep_time if sleep_time.positive?
 end
-
-puts 'Game over!'
