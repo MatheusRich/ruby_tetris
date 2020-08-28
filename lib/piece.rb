@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
+require_relative 'string_colors'
+
 class Piece
+  using StringColors
+
   DEG_0 = 0
   DEG_90 = 1
   DEG_180 = 2
