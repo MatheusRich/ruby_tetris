@@ -115,10 +115,10 @@ class Tetris
   end
 
   def handle_input(key)
-    @piece.move_left! if key == :left && @piece.move_left.fits?(@field)
-    @piece.move_right! if key == :right && @piece.move_right.fits?(@field)
-    @piece.move_down! if key == :down && @piece.move_down.fits?(@field)
-    @piece.rotate! if key == :space && @piece.rotate.fits?(@field)
+    @piece.move_left! if key == :left && @piece.try(:move_left).fits?(@field)
+    @piece.move_right! if key == :right && @piece.try(:move_right).fits?(@field)
+    @piece.move_down! if key == :down && @piece.try(:move_down).fits?(@field)
+    @piece.rotate! if key == :space && @piece.try(:rotate).fits?(@field)
   end
 
   def draw_field!

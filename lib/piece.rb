@@ -69,42 +69,21 @@ class Piece
     @x -= 1
   end
 
-  def move_left
-    copy = dup
-    copy.move_left!
-
-    copy
-  end
-
   def move_right!
     @x += 1
-  end
-
-  def move_right
-    copy = dup
-    copy.move_right!
-
-    copy
   end
 
   def move_down!
     @y += 1
   end
 
-  def move_down
-    copy = dup
-    copy.move_down!
-
-    copy
-  end
-
   def rotate!
     @rotation += 1
   end
 
-  def rotate
+  def try(movement)
     copy = dup
-    copy.rotate!
+    copy.public_send("#{movement}!")
 
     copy
   end
