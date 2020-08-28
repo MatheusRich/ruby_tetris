@@ -63,28 +63,6 @@ class Field
     end
   end
 
-  def check
-    (0...4).each do |y|
-      pos_y = current_y + y
-
-      if pos_y < Field::HEIGHT - 1
-        has_complete_line = true
-
-        (1...(Field::WIDTH - 1)).each do |x|
-          has_complete_line &= @field.filled_at?(x, pos_y)
-        end
-
-        if has_complete_line
-          (1...(Field::WIDTH - 1)).each do |x|
-            @field.set(x, pos_y, as: Field::Tile::LINE)
-          end
-
-          lines << pos_y
-        end
-      end
-    end
-  end
-
   def check_for_lines!(piece_y)
     (0...4).each do |y|
       pos_y = piece_y + y
