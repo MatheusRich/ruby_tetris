@@ -21,10 +21,6 @@ class Field
     @tiles[coordinates(x, y)] = as
   end
 
-  def force_set(pos, as:)
-    @tiles[pos] = as
-  end
-
   def at(x, y)
     @tiles[coordinates(x, y)]
   end
@@ -69,15 +65,28 @@ class Field
 
       next if pos_y >= Field::HEIGHT - 1
 
-      columns = (1...(Field::WIDTH - 1))
-      has_complete_line = columns.all? { |x| filled_at?(x, pos_y) }
+      has_complete_line = not_wall_columns.all? { |x| filled_at?(x, pos_y) }
 
       next unless has_complete_line
 
-      columns.each { |x| set(x, pos_y, as: Tile::LINE) }
+      not_wall_columns.each { |x| set(x, pos_y, as: Tile::LINE) }
 
       lines << pos_y
     end
+  end
+
+  def drop_lines!
+    lines.each do |line_y_pos|
+      not_wall_columns.each do |x|
+        line_y_pos.downto(1) do |y|
+          set(x, y, as: at(x, y - 1))
+        end
+
+        set_pos(x, as: Field::Tile::BLANK)
+      end
+    end
+
+    clear_lines!
   end
 
   private
@@ -100,5 +109,13 @@ class Field
 
   def tile_for(x, y)
     x.zero? || x == WIDTH - 1 || y == HEIGHT - 1 ? Tile::BORDER : Tile::BLANK
+  end
+
+  def not_wall_columns
+    @not_wall_columns ||= 1...(Field::WIDTH - 1)
+  end
+
+  def set_pos(pos, as:)
+    @tiles[pos] = as
   end
 end

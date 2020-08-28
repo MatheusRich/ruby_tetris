@@ -122,20 +122,10 @@ class Tetris
         puts "Record: #{high_scores.first['score']}\n\n"
         sleep 0.3
 
-        @field.lines.each do |line_y_pos|
-          (1...(Field::WIDTH - 1)).each do |x|
-            line_y_pos.downto(1) do |y|
-              @field.set(x, y, as: @field.at(x, y - 1))
-            end
-
-            @field.force_set(x, as: Field::Tile::BLANK)
-          end
-        end
-
-        @field.clear_lines!
+        @field.drop_lines!
       end
 
-      render(screen, score, high_scores)
+      render_canvas(screen, score, high_scores)
 
       tf = Time.now
       elapsed_time = tf - t0
@@ -160,7 +150,7 @@ class Tetris
     screen
   end
 
-  def render(screen, score, high_scores)
+  def render_canvas(screen, score, high_scores)
     @io.write(screen)
     puts "Score: #{score}"
     puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
