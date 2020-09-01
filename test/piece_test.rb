@@ -2,10 +2,8 @@
 
 require_relative './test_helper'
 
-class TestTetris < Minitest::Test
+class PieceTest < Minitest::Test
   def test_that_it_builds_assets
-    blocks = build_assets
-
     exp = [
       '..X.' \
       '..X.' \
@@ -43,7 +41,7 @@ class TestTetris < Minitest::Test
       '.X..'
     ]
 
-    blocks.zip(exp).each do |block, expected_block|
+    Piece::TETROMINOS.zip(exp).each do |block, expected_block|
       assert_equal expected_block, block
     end
   end

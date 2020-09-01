@@ -2,7 +2,7 @@
 
 require_relative './test_helper'
 
-class TestBasicMath < Minitest::Test
+class BasicMathTest < Minitest::Test
   def test_that_it_has_degrees
     assert_equal 0, BasicMath::DEG_0
     assert_equal 1, BasicMath::DEG_90
