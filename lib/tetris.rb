@@ -19,7 +19,7 @@ class Tetris
     @field = Field.new
     @piece = new_piece
     @score = 0
-    @high_scores = JSON.parse(File.read('./high_scores.json'))
+    @record = JSON.parse(File.read('./record.json'))
   end
 
   def play
@@ -46,11 +46,10 @@ class Tetris
         if @piece.try(:move_down).fits?(@field)
           @piece.move_down!
         else
-          @field.lock_piece!(piece)
-
           delivered_pieces += 1
           game_speed -= 1 if (delivered_pieces % 10 == 0) && game_speed.positive?
 
+          @field.lock_piece!(piece)
           @field.check_for_lines!(@piece.y)
 
           @score += 25
@@ -82,7 +81,7 @@ class Tetris
 
   private
 
-  attr_accessor :piece, :screen, :score, :high_scores
+  attr_accessor :piece, :screen, :score, :record
 
   def new_piece
     Piece.new(x: Field::WIDTH / 2, y: 0)
@@ -115,10 +114,23 @@ class Tetris
   def render_canvas
     @io.write(@canvas.canvas)
     puts "Score: #{score}"
-    puts "Record: #{high_scores.first['score']} by #{high_scores.first['name']}\n\n"
+    puts "Record: #{record['score']} by #{record['name']}\n\n"
   end
 
   def on_game_over
     puts 'Game over!'
+
+    update_record if score > record['score']
+  end
+
+  def update_record
+    system 'clear'
+    puts 'New record! What is your name?'
+    print '> '
+    name = gets.chomp
+
+    record = { 'name' => name, 'score' => score }
+
+    File.write('record.json', record.to_json)
   end
 end
