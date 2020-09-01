@@ -11,3 +11,4 @@ end
 Minitest::Reporters.use! [Minitest::Reporters::DefaultReporter.new(color: true)]
 
 require_relative '../lib/tetris'
+require_relative '../lib/basic_math'
