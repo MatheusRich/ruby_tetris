@@ -16,3 +16,5 @@ group :test do
   gem 'rake'
   gem 'simplecov', require: false
 end
+
+gem 'rich_engine', path: '../rich_engine'

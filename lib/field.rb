@@ -49,32 +49,6 @@ class Field
     end
   end
 
-  def clear_lines!
-    @lines = []
-  end
-
-  def lock_piece!(piece)
-    piece.each_tile do |x, y|
-      self[x, y] = piece.id + 1
-    end
-  end
-
-  def check_for_lines!(piece_y)
-    (0...4).each do |y|
-      pos_y = piece_y + y
-
-      next if pos_y >= Field::HEIGHT - 1
-
-      has_complete_line = not_wall_columns.all? { |x| filled_at?(x, pos_y) }
-
-      next unless has_complete_line
-
-      not_wall_columns.each { |x| self[x, pos_y] = Tile::LINE }
-
-      lines << pos_y
-    end
-  end
-
   def drop_lines!
     lines.each do |line_y_pos|
       not_wall_columns.each do |x|

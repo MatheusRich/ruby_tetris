@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'lib/tetris'
+require_relative 'lib/ruby_racing'
 
-Tetris.play
+RubyRacing.play
